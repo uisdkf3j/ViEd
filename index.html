@@ -1,357 +1,254 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Editor</title>
     <style>
         body {
-            margin: 0;
-            padding: 20px;
             font-family: Arial, sans-serif;
-            background-color: #1e1e1e;
+            margin: 20px;
+            background: #1a1a1a;
             color: white;
         }
-        
-        .container {
+
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            gap: 20px;
-        }
-
-        .preview-section {
-            flex: 1;
-            background-color: #2d2d2d;
-            border-radius: 8px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
+            z-index: 1000;
         }
 
-        #videoPreview {
-            max-width: 100%;
-            max-height: calc(100% - 50px);
-            background-color: black;
+        .progress-bar {
+            width: 300px;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
         }
 
-        .playback-controls {
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
+        .progress {
+            width: 0%;
+            height: 100%;
+            background: #4CAF50;
+            transition: width 0.3s;
         }
 
-        .control-btn {
-            background-color: #4a4a4a;
-            color: white;
+        #preview {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            display: block;
+        }
+
+        #controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 0 5px;
+            background: #4CAF50;
             border: none;
-            border-radius: 4px;
-            padding: 8px 15px;
+            color: white;
             cursor: pointer;
+            border-radius: 4px;
         }
 
-        .control-btn:hover {
-            background-color: #5a5a5a;
+        button:hover {
+            background: #45a049;
         }
 
-        .timeline-section {
-            height: 250px;
-            background-color: #2d2d2d;
-            border-radius: 8px;
-            padding: 20px;
+        #timeline {
+            width: 100%;
+            height: 100px;
+            background: #2a2a2a;
             position: relative;
+            overflow-x: auto;
+            margin-top: 20px;
         }
 
-        .timeline-container {
-            position: relative;
-            margin-top: 30px;
+        .video-segment {
+            height: 50px;
+            background: #4CAF50;
+            position: absolute;
+            cursor: move;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            user-select: none;
+        }
+
+        #timeline-scrubber {
+            position: absolute;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: red;
+            pointer-events: none;
         }
 
         .time-markers {
             height: 20px;
             position: relative;
-            margin-bottom: 5px;
-        }
-
-        .time-marker {
-            position: absolute;
-            font-size: 12px;
-            transform: translateX(-50%);
-            color: #888;
-        }
-
-        .time-marker::before {
-            content: '';
-            position: absolute;
-            height: 5px;
-            width: 1px;
-            background: #888;
-            bottom: -8px;
-            left: 50%;
-        }
-
-        .timeline {
-            height: 100px;
-            background-color: #3d3d3d;
-            border-radius: 4px;
-            overflow-x: auto;
-            white-space: nowrap;
-            padding: 10px;
-            position: relative;
-        }
-
-        .timeline-scrubber {
-            position: absolute;
-            top: 0;
-            width: 2px;
-            height: 100%;
-            background-color: #ff0000;
-            pointer-events: none;
-            z-index: 2;
-        }
-
-        .timeline-clip {
-            display: inline-block;
-            height: 80px;
-            background-color: #666;
-            margin: 0 5px;
-            border-radius: 4px;
-            cursor: move;
-            position: relative;
-        }
-
-        .timeline-clip.dragging {
-            opacity: 0.5;
-        }
-
-        .controls {
-            margin-bottom: 10px;
-        }
-
-        .import-btn {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .import-btn:hover {
-            background-color: #45a049;
-        }
-
-        .clip-title {
-            position: absolute;
-            bottom: 5px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 12px;
-            white-space: nowrap;
-            overflow: hidden;
-            max-width: 90%;
-        }
-
-        #currentTime {
-            margin: 0 10px;
-            min-width: 80px;
+            background: #333;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="preview-section">
-            <video id="videoPreview">
-                Your browser does not support the video element.
-            </video>
-            <div class="playback-controls">
-                <button class="control-btn" onclick="playPreviousClip()">⏮</button>
-                <button class="control-btn" onclick="togglePlay()">⏯</button>
-                <button class="control-btn" onclick="playNextClip()">⏭</button>
-                <span id="currentTime">00:00 / 00:00</span>
-            </div>
-        </div>
-        
-        <div class="timeline-section">
-            <div class="controls">
-                <input type="file" id="videoInput" accept="video/mp4" style="display: none;" multiple>
-                <button class="import-btn" onclick="document.getElementById('videoInput').click()">Import Videos</button>
-            </div>
-            <div class="timeline-container">
-                <div class="time-markers" id="timeMarkers"></div>
-                <div class="timeline" id="timeline">
-                    <div class="timeline-scrubber" id="scrubber"></div>
-                    <!-- Timeline clips will be added here -->
-                </div>
-            </div>
+    <div id="loading-screen">
+        <h2>Loading Videos...</h2>
+        <div class="progress-bar">
+            <div class="progress" id="loading-progress"></div>
         </div>
     </div>
 
-    <script>
-        const videoInput = document.getElementById('videoInput');
-        const videoPreview = document.getElementById('videoPreview');
-        const timeline = document.getElementById('timeline');
-        const scrubber = document.getElementById('scrubber');
-        const timeMarkers = document.getElementById('timeMarkers');
-        const currentTimeDisplay = document.getElementById('currentTime');
-        let clips = [];
-        let currentClipIndex = 0;
-        let totalDuration = 0;
+    <video id="preview" controls></video>
+    
+    <div id="controls">
+        <button onclick="playVideo()">Play</button>
+        <button onclick="pauseVideo()">Pause</button>
+        <button onclick="stopVideo()">Stop</button>
+    </div>
 
-        videoInput.addEventListener('change', function(e) {
-            const files = Array.from(e.target.files);
-            files.forEach(file => addVideoClip(file));
+    <div id="timeline">
+        <div class="time-markers"></div>
+        <div id="timeline-scrubber"></div>
+    </div>
+
+    <script>
+        const videoUrls = [
+            '/ViEd/Video_Panorama_1.mp4',
+            '/ViEd/Video_Panorama_2.mp4',
+            '/ViEd/Video_Panorama_3.mp4',
+        ];
+
+        const preview = document.getElementById('preview');
+        const timeline = document.getElementById('timeline');
+        const scrubber = document.getElementById('timeline-scrubber');
+        const loadingScreen = document.getElementById('loading-screen');
+        const loadingProgress = document.getElementById('loading-progress');
+        let segments = [];
+        let currentSegment = 0;
+        let loadedVideos = 0;
+
+        // Load videos and create timeline segments
+        videoUrls.forEach((url, index) => {
+            const video = document.createElement('video');
+            video.src = url;
+            video.preload = 'metadata';
+
+            video.onloadedmetadata = function() {
+                const segment = document.createElement('div');
+                segment.className = 'video-segment';
+                segment.style.width = (video.duration * 50) + 'px';  // 50px per second
+                segment.style.left = (index * 300) + 'px';
+                segment.style.top = '30px';
+                segment.setAttribute('data-index', index);
+                segment.innerHTML = `Video ${index + 1}`;
+                timeline.appendChild(segment);
+                
+                segments.push({
+                    element: segment,
+                    video: video,
+                    duration: video.duration
+                });
+
+                makeDraggable(segment);
+                
+                loadedVideos++;
+                loadingProgress.style.width = (loadedVideos / videoUrls.length * 100) + '%';
+                
+                if (loadedVideos === videoUrls.length) {
+                    loadingScreen.style.display = 'none';
+                }
+            };
         });
 
-        function formatTime(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            seconds = Math.floor(seconds % 60);
-            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-
-        function updateTimeMarkers() {
-            timeMarkers.innerHTML = '';
-            const timelineWidth = timeline.scrollWidth;
-            const interval = 5; // 5 second intervals
-            const pixelsPerSecond = 50;
+        function makeDraggable(element) {
+            let pos1 = 0, pos3 = 0;
             
-            for (let i = 0; i <= totalDuration; i += interval) {
-                const marker = document.createElement('div');
-                marker.className = 'time-marker';
-                marker.style.left = (i * pixelsPerSecond) + 'px';
-                marker.textContent = formatTime(i);
-                timeMarkers.appendChild(marker);
+            element.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                e.preventDefault();
+                pos3 = e.clientX;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos3 = e.clientX;
+                element.style.left = (element.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+                updateSegmentOrder();
             }
         }
 
-        function updateScrubber() {
-            const timelineRect = timeline.getBoundingClientRect();
-            const progress = videoPreview.currentTime / videoPreview.duration;
-            const currentClip = clips[currentClipIndex];
-            const clipOffset = currentClip.offsetLeft;
-            const clipWidth = currentClip.offsetWidth;
-            scrubber.style.left = (clipOffset + (clipWidth * progress)) + 'px';
-            
-            currentTimeDisplay.textContent = `${formatTime(videoPreview.currentTime)} / ${formatTime(videoPreview.duration)}`;
+        function updateSegmentOrder() {
+            segments.sort((a, b) => {
+                return a.element.offsetLeft - b.element.offsetLeft;
+            });
         }
 
-        function addVideoClip(file) {
-            const videoURL = URL.createObjectURL(file);
-            const tempVideo = document.createElement('video');
-            tempVideo.src = videoURL;
-            
-            tempVideo.onloadedmetadata = function() {
-                const clip = document.createElement('div');
-                clip.className = 'timeline-clip';
-                clip.style.width = (tempVideo.duration * 50) + 'px'; // 50px per second
-                clip.setAttribute('draggable', true);
-                clip.innerHTML = `<div class="clip-title">${file.name}</div>`;
-                
-                clip.videoUrl = videoURL;
-                clip.duration = tempVideo.duration;
-                clips.push(clip);
-                
-                // Add drag and drop events
-                clip.addEventListener('dragstart', handleDragStart);
-                clip.addEventListener('dragend', handleDragEnd);
-                clip.addEventListener('dragover', handleDragOver);
-                clip.addEventListener('drop', handleDrop);
-                
-                timeline.appendChild(clip);
-                
-                totalDuration += tempVideo.duration;
-                updateTimeMarkers();
-                
-                if (clips.length === 1) {
-                    videoPreview.src = videoURL;
-                }
-            };
+        function playVideo() {
+            preview.src = segments[currentSegment].video.src;
+            preview.play();
+        }
+
+        function pauseVideo() {
+            preview.pause();
+        }
+
+        function stopVideo() {
+            preview.pause();
+            preview.currentTime = 0;
+            currentSegment = 0;
         }
 
         timeline.addEventListener('click', function(e) {
             const timelineRect = timeline.getBoundingClientRect();
-            const clickX = e.clientX - timelineRect.left + timeline.scrollLeft;
+            const clickPosition = e.clientX - timelineRect.left;
+            scrubber.style.left = clickPosition + 'px';
             
-            let accumulatedWidth = 0;
-            for (let i = 0; i < clips.length; i++) {
-                const clipWidth = clips[i].offsetWidth;
-                if (clickX >= accumulatedWidth && clickX < accumulatedWidth + clipWidth) {
-                    currentClipIndex = i;
-                    videoPreview.src = clips[i].videoUrl;
-                    const relativePosition = (clickX - accumulatedWidth) / clipWidth;
-                    videoPreview.currentTime = relativePosition * clips[i].duration;
-                    videoPreview.play();
+            // Find which video segment was clicked
+            let totalWidth = 0;
+            for (let i = 0; i < segments.length; i++) {
+                const segWidth = parseFloat(segments[i].element.style.width);
+                if (clickPosition >= totalWidth && clickPosition < totalWidth + segWidth) {
+                    currentSegment = i;
+                    preview.src = segments[i].video.src;
+                    preview.currentTime = (clickPosition - totalWidth) / 50; // 50px per second
                     break;
                 }
-                accumulatedWidth += clipWidth;
+                totalWidth += segWidth;
             }
         });
 
-        // Drag and Drop functionality
-        let draggedClip = null;
-
-        function handleDragStart(e) {
-            draggedClip = this;
-            this.classList.add('dragging');
+        // Add time markers
+        const timeMarkers = document.querySelector('.time-markers');
+        for (let i = 0; i < 10; i++) {
+            const marker = document.createElement('div');
+            marker.style.position = 'absolute';
+            marker.style.left = (i * 300) + 'px';
+            marker.style.top = '0';
+            marker.style.color = 'white';
+            marker.innerHTML = i * 5 + 's';
+            timeMarkers.appendChild(marker);
         }
-
-        function handleDragEnd(e) {
-            draggedClip.classList.remove('dragging');
-            draggedClip = null;
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault();
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-            if (draggedClip !== this) {
-                const allClips = [...timeline.getElementsByClassName('timeline-clip')];
-                const draggedIndex = allClips.indexOf(draggedClip);
-                const droppedIndex = allClips.indexOf(this);
-                
-                if (draggedIndex < droppedIndex) {
-                    this.parentNode.insertBefore(draggedClip, this.nextSibling);
-                } else {
-                    this.parentNode.insertBefore(draggedClip, this);
-                }
-                
-                clips = [...timeline.getElementsByClassName('timeline-clip')];
-            }
-        }
-
-        // Playback controls
-        function togglePlay() {
-            if (videoPreview.paused) {
-                videoPreview.play();
-            } else {
-                videoPreview.pause();
-            }
-        }
-
-        function playNextClip() {
-            if (currentClipIndex < clips.length - 1) {
-                currentClipIndex++;
-                videoPreview.src = clips[currentClipIndex].videoUrl;
-                videoPreview.play();
-            }
-        }
-
-        function playPreviousClip() {
-            if (currentClipIndex > 0) {
-                currentClipIndex--;
-                videoPreview.src = clips[currentClipIndex].videoUrl;
-                videoPreview.play();
-            }
-        }
-
-        videoPreview.addEventListener('timeupdate', updateScrubber);
-        videoPreview.addEventListener('ended', playNextClip);
     </script>
 </body>
 </html>
-
-
