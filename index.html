@@ -5,8 +5,8 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
-            background: #1a1a1a;
-            color: white;
+            background: #ffffff;
+            color: #1a222e;
         }
 
         #loading-screen {
@@ -34,56 +34,279 @@
         .progress {
             width: 0%;
             height: 100%;
-            background: #4CAF50;
+            background: #ffc600;
             transition: width 0.3s;
         }
 
         #preview {
             width: 100%;
-            max-width: 800px;
+            max-width: calc((100vw - 40px) * 0.66); /* 2/3 of timeline width */
             margin: 20px auto;
             display: block;
         }
 
         #controls {
-            text-align: center;
-            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px auto;
+            gap: 10px;
+            max-width: calc(100vw - 40px);
+            position: relative;
         }
 
         button {
             padding: 10px 20px;
-            margin: 0 5px;
-            background: #4CAF50;
+            background: #ffc600;
             border: none;
-            color: white;
+            color: #1a222e;
             cursor: pointer;
-            border-radius: 4px;
-        }
-
-        button:hover {
-            background: #45a049;
-        }
-
-        #timeline {
-            width: 100%;
-            height: 100px;
-            background: #2a2a2a;
-            position: relative;
-            overflow-x: auto;
-            margin-top: 20px;
-        }
-
-        .video-segment {
-            height: 50px;
-            background: #4CAF50;
-            position: absolute;
-            cursor: move;
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
+            min-width: 80px;
+            min-height: 40px;
+        }
+
+        button:hover {
+            background: #e6b200;
+        }
+
+        #timeline {
+            width: 100%;
+            height: 400px; /* Increased height to accommodate audio track */
+            background: #1a222e;
+            position: relative;
+            margin-top: 20px;
+            border-radius: 6px;
+            box-shadow: inset 0 0 20px rgba(255,198,0,0.1);
+            overflow: hidden;
+        }
+
+        .video-segment {
+            height: 160px;
+            background: linear-gradient(135deg, rgba(255,198,0,1), rgba(255,198,0,1));
+            position: absolute;
+            border-radius: 4px;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            color: #1a222e;
+            user-select: none;
+            transform-origin: left;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            margin: 5px;
+            padding: 5px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 
+                0 4px 12px rgba(0,0,0,0.1),
+                inset 0 0 20px rgba(255,255,255,0.1);
+        }
+
+        .audio-track {
+            position: absolute;
+            top: 220px; /* Position below video segments */
+            left: 0;
+            height: 100px;
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+            border-top: 1px solid rgba(255,255,255,0.2);
+            padding: 10px 0;
+        }
+
+        .audio-segment {
+            height: 80px;
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            position: absolute;
+            border-radius: 4px;
             color: white;
             user-select: none;
+            transform-origin: left;
+            transition: all 0.3s ease;
+            margin: 5px;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            /* Add this line to make it span the full width */
+            width: calc(100% - 10px); /* 10px accounts for the left and right margins */
+            cursor: pointer; /* Add cursor pointer for clickable element */
+        }
+
+        .segment-title {
+            padding: 6px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            height: 20px;
+            transform: scaleX(calc(1 / var(--timeline-scale)));
+            border-radius: 3px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            cursor: grab;
+        }
+
+        #delete-zone {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            width: 60px;
+            height: 60px;
+            background: rgba(255,0,0,0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(255,0,0,0.4);
+        }
+
+        #delete-zone.active {
+            transform: translateX(-50%) scale(1);
+        }
+
+        #delete-zone.hover {
+            background: rgba(255,0,0,1);
+            transform: translateX(-50%) scale(1.2);
+            box-shadow: 0 0 30px rgba(255,0,0,0.6);
+        }
+
+        .segment-thumbnail {
+            height: 60px;
+            background: rgba(26,34,46,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: scaleX(calc(1 / var(--timeline-scale)));
+            margin: 4px 0;
+            border-radius: 3px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+        }
+
+        .segment-thumbnail img {
+            height: 100%;
+            width: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .segment-thumbnail:hover img {
+            transform: scale(1.1);
+        }
+
+        /* Add hover effect for thumbnail and description */
+        .segment-thumbnail:hover ~ .video-segment,
+        .segment-description:hover ~ .video-segment,
+        .segment-thumbnail:hover,
+        .segment-description:hover {
+            background: linear-gradient(135deg, #ffdb4d, #ffdb4d);
+        }
+
+        #add-video-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #ffc600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            position: absolute;
+            right: 0;
+        }
+
+        #add-video-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a222e;
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 1001;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            max-width: 80%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+        }
+
+        .video-option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .video-option:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .video-option input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .segment-description {
+            padding: 6px;
+            font-size: 16.5px; /* 1.5x larger */
+            height: 60px;
+            color: #ffffff;
+            transform: scaleX(calc(1 / var(--timeline-scale)));
+            transform-origin: left;
+            width: calc(100% * var(--timeline-scale));
+            border-radius: 3px;
+            line-height: 1.3;
+            cursor: pointer;
+        }
+
+        .video-segment.dragging {
+            opacity: 0.9;
+            cursor: grabbing;
+            z-index: 100;
+            transform: scale(1.02);
+            box-shadow: 
+                0 8px 24px rgba(0,0,0,0.3),
+                inset 0 0 30px rgba(255,255,255,0.2);
+            background: linear-gradient(135deg, rgba(255,198,0,1), rgba(255,198,0,0.8));
+            position: fixed;
+            pointer-events: none;
         }
 
         #timeline-scrubber {
@@ -91,15 +314,124 @@
             top: 0;
             width: 2px;
             height: 100%;
-            background: red;
+            background: #ffc600;
             pointer-events: none;
+            z-index: 200;
+            box-shadow: 
+                0 0 10px #ffc600,
+                0 0 20px rgba(255,198,0,0.5);
         }
 
         .time-markers {
             height: 20px;
             position: relative;
-            background: #333;
+            background: rgba(26,34,46,0.5);
+            font-size: 10px;
+            border-radius: 0 0 4px 4px;
+            border-top: 1px solid rgba(255,255,255,0.1);
         }
+
+        .snap-guide {
+            position: absolute;
+            top: 20px; /* Match the top position of video segments */
+            width: 2px;
+            height: calc(100% - 20px); /* Match the height of video segments */
+            background: rgba(255,198,0,0.5);
+            pointer-events: none;
+            z-index: 150;
+            display: none;
+        }
+
+        .snap-guide.active {
+            display: block;
+        }
+
+        /* New styles for the popup window */
+        #popup-window {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a222e;
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 1002;
+            width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        #popup-window h3 {
+            color: white;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        #popup-window textarea {
+            width: 370px;
+            height: 150px;
+            margin: 5px;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            resize: none;
+        }
+
+        #popup-window .popup-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Volume popup styles */
+        #volume-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a222e;
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 1002;
+            width: 300px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        #volume-popup h3 {
+            color: white;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        #volume-slider {
+            width: 200px;
+            height: 4px;
+            -webkit-appearance: none;
+            background: #ffc600;
+            border-radius: 2px;
+            outline: none;
+        }
+
+        #volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #1a222e;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #ffc600;
+        }
+
     </style>
 </head>
 <body>
@@ -110,145 +442,734 @@
         </div>
     </div>
 
-    <video id="preview" controls></video>
-    
+    <div id="popup-window">
+        <h3 id="popup-title"></h3>
+        <textarea id="popup-text"></textarea>
+        <div class="popup-buttons">
+            <button onclick="closePopup()">Cancel</button>
+            <button onclick="regenerateText()">Regenerate</button>
+        </div>
+    </div>
+
+    <div id="volume-popup">
+        <h3>Background Music Volume</h3>
+        <div class="volume-control">
+            <input type="range" id="volume-slider" min="0" max="100" value="15">
+        </div>
+        <div class="popup-buttons">
+            <button onclick="closeVolumePopup()">Close</button>
+        </div>
+    </div>
+
+    <video id="preview"></video>
+    <audio id="background-music" src="music.mp3"></audio>
+
     <div id="controls">
-        <button onclick="playVideo()">Play</button>
-        <button onclick="pauseVideo()">Pause</button>
-        <button onclick="stopVideo()">Stop</button>
+        <button onclick="previousVideo()">
+            <svg width="24" height="24" viewBox="0 0 24 24">
+                <path fill="#1a222e" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+            </svg>
+        </button>
+        <button id="playPauseBtn" onclick="togglePlayPause()">Play</button>
+        <button onclick="nextVideo()">
+            <svg width="24" height="24" viewBox="0 0 24 24">
+                <path fill="#1a222e" d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/>
+            </svg>
+        </button>
+        <div id="add-video-btn">+</div>
     </div>
 
     <div id="timeline">
         <div class="time-markers"></div>
         <div id="timeline-scrubber"></div>
+        <div class="snap-guide"></div>
+        <div class="audio-track">
+            <div class="audio-segment" onclick="openVolumePopup()">
+                Background Music
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-zone">×</div>
+
+    <div class="modal-overlay"></div>
+    <div id="add-video-modal">
+        <h3 style="color: white; margin-bottom: 15px;">Select Videos to Add</h3>
+        <div id="video-options"></div>
+        <div class="modal-buttons">
+            <button onclick="closeAddVideoModal()">Cancel</button>
+            <button onclick="addSelectedVideos()">Add Selected</button>
+        </div>
     </div>
 
     <script>
         const videoUrls = [
-            '/ViEd/Video_Panorama_1.mp4',
-            '/ViEd/Video_Panorama_2.mp4',
-            '/ViEd/Video_Panorama_3.mp4',
+            'Video_Panorama_1.mp4',
+            'Video_Panorama_2.mp4',
+            'Video_Panorama_3.mp4',
+            'Video_Panorama_4.mp4',
+            'Video_Panorama_5.mp4',
+            'Video_Panorama_6.mp4',
+            'Video_Panorama_7.mp4',
+            'Video_Panorama_8.mp4',
+            'Video_Panorama_9.mp4'
         ];
 
+
+        const videoNames = {
+            'Video_Panorama_1.mp4': 'Facade',
+            'Video_Panorama_2.mp4': 'Landing',
+            'Video_Panorama_3.mp4': 'Entrance',
+            'Video_Panorama_4.mp4': 'Bathroom',
+            'Video_Panorama_5.mp4': 'Hallway',
+            'Video_Panorama_6.mp4': 'Bedroom 1',
+            'Video_Panorama_7.mp4': 'Bedroom 2',
+            'Video_Panorama_8.mp4': 'Living Area',
+            'Video_Panorama_9.mp4': 'Kitchen'
+        };
+
         const preview = document.getElementById('preview');
+        const backgroundMusic = document.getElementById('background-music');
         const timeline = document.getElementById('timeline');
         const scrubber = document.getElementById('timeline-scrubber');
+        const snapGuide = document.querySelector('.snap-guide');
         const loadingScreen = document.getElementById('loading-screen');
         const loadingProgress = document.getElementById('loading-progress');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const addVideoBtn = document.getElementById('add-video-btn');
+        const addVideoModal = document.getElementById('add-video-modal');
+        const modalOverlay = document.querySelector('.modal-overlay');
+        const deleteZone = document.getElementById('delete-zone');
+        const popupWindow = document.getElementById('popup-window');
+        const volumePopup = document.getElementById('volume-popup');
         let segments = [];
         let currentSegment = 0;
         let loadedVideos = 0;
+        let isPlaying = false;
+        let totalDuration = 0;
+        let timelineScale = 1;
+        let draggedSegment = null;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let initialSegmentX = 0;
+        let initialSegmentY = 0;
+        let draggedSegmentRect = null;
+        let originalSegmentElement = null;
+        let snapThreshold = 10; // Pixels within which snapping occurs
+        let isShiftPressed = false;
 
-        // Load videos and create timeline segments
-        videoUrls.forEach((url, index) => {
-            const video = document.createElement('video');
-            video.src = url;
-            video.preload = 'metadata';
+        function openVolumePopup() {
+            volumePopup.style.display = 'block';
+            modalOverlay.style.display = 'block';
+        }
 
-            video.onloadedmetadata = function() {
-                const segment = document.createElement('div');
-                segment.className = 'video-segment';
-                segment.style.width = (video.duration * 50) + 'px';  // 50px per second
-                segment.style.left = (index * 300) + 'px';
-                segment.style.top = '30px';
-                segment.setAttribute('data-index', index);
-                segment.innerHTML = `Video ${index + 1}`;
-                timeline.appendChild(segment);
-                
-                segments.push({
-                    element: segment,
-                    video: video,
-                    duration: video.duration
-                });
+        function closeVolumePopup() {
+            volumePopup.style.display = 'none';
+            modalOverlay.style.display = 'none';
+        }
 
-                makeDraggable(segment);
-                
-                loadedVideos++;
-                loadingProgress.style.width = (loadedVideos / videoUrls.length * 100) + '%';
-                
-                if (loadedVideos === videoUrls.length) {
-                    loadingScreen.style.display = 'none';
-                }
-            };
+        document.getElementById('volume-slider').addEventListener('input', function(e) {
+            backgroundMusic.volume = e.target.value / 100;
         });
 
-        function makeDraggable(element) {
-            let pos1 = 0, pos3 = 0;
+        // Add this near the top of your script with other initialization code
+        window.addEventListener('load', () => {
+            // Set music to loop
+            backgroundMusic.loop = true;
+            // Set initial volume (0.15 = 15%)
+            backgroundMusic.volume = 0.15;
+            document.getElementById('volume-slider').value = 15;
+        });
+
+        const videoDescriptions = {
+            'Video_Panorama_1.mp4': 'Welcome to this charming two-bedr...',
+            'Video_Panorama_2.mp4': 'Moving along, we step into the inviting...',
+            'Video_Panorama_3.mp4': "Now, we step into the apartment's entr...",
+            'Video_Panorama_4.mp4': 'Turning our attention to the bathroom...',
+            'Video_Panorama_5.mp4': 'As we make our way through the apartment...',
+            'Video_Panorama_6.mp4': 'Continuing onward, we enter the primary...',
+            'Video_Panorama_7.mp4': "Shifting our focus to the children's room...",
+            'Video_Panorama_8.mp4': 'As we transition to the kitchen and living...',
+            'Video_Panorama_9.mp4': "Let's also take a look at the dining area..."
+        };
+
+        // Add video modal functionality
+        addVideoBtn.addEventListener('click', openAddVideoModal);
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === modalOverlay) {
+                closeAddVideoModal();
+                closePopup();
+                closeVolumePopup();
+            }
+        });
+
+        // Add keyboard event listeners for shift key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Shift') isShiftPressed = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Shift') isShiftPressed = false;
+        });
+
+        function showVideoName(name) {
+            document.getElementById('popup-title').textContent = name;
+            let text = '';
             
-            element.onmousedown = dragMouseDown;
-
-            function dragMouseDown(e) {
-                e.preventDefault();
-                pos3 = e.clientX;
-                document.onmouseup = closeDragElement;
-                document.onmousemove = elementDrag;
+            switch(name) {
+                case 'Facade':
+                    text = 'Welcome to this charming two-bedroom, one-bathroom apartment located on Valdemara Street in Riga! With 1,014 square feet of living space, this property offers both convenience and comfort in a desirable urban setting.';
+                    break;
+                case 'Landing':
+                    text = 'Moving along, we step into the inviting landing area, which leads directly to the apartment\'s entrance. This bright and clean space features classic tiled flooring and an elegant staircase, adding a timeless charm to the building\'s shared spaces.';
+                    break;
+                case 'Entrance':
+                    text = 'Now, we step into the apartment\'s entryway, which immediately sets a warm and inviting tone. The space features elegant parquet flooring, built-in shelving with a mid-century flair, and ample natural light flowing from adjoining rooms.';
+                    break;
+                case 'Bathroom':
+                    text = 'Turning our attention to the bathroom, this beautifully designed space spans 77.19 square feet. It features a freestanding tub, stylish patterned tiles, and a large window that fills the room with natural light while providing modern comfort and elegance.';
+                    break;
+                case 'Hallway':
+                    text = 'As we make our way through the apartment, we come to this central hallway that perfectly connects the living areas. Its elegant parquet flooring continues to unify the space, while the wide doorway draws attention to the natural light and greenery in the adjacent rooms.';
+                    break;
+                case 'Bedroom 1':
+                    text = 'Continuing onward, we enter the primary bedroom, a serene retreat filled with natural light. The space features generous storage, lush greenery, and a peaceful view, making it the perfect sanctuary for rest and relaxation.';
+                    break;
+                case 'Bedroom 2':
+                    text = 'Shifting our focus to the children\'s room, this delightful space is brimming with playful charm and functionality. Its vibrant decor, abundant natural light, and well-organized layout make it a perfect area for creativity, play, and rest.';
+                    break;
+                case 'Living Area':
+                    text = 'As we transition to the kitchen and living area, this open-concept space effortlessly combines style and practicality. With sleek, modern cabinetry, ample shelving, and a cozy seating arrangement, it\'s perfect for entertaining or unwinding after a long day.';
+                    break;
+                case 'Kitchen':
+                    text = 'Let\'s also take a look at the dining area, seamlessly integrated into the kitchen and living space. With a cozy nook by the large bay window and a natural flow to the open-plan design, this area is perfect for family meals or entertaining with style.';
+                    break;
+                default:
+                    text = '';
             }
+            
+            document.getElementById('popup-text').value = text;
+            popupWindow.style.display = 'block';
+            modalOverlay.style.display = 'block';
+        }
 
-            function elementDrag(e) {
-                e.preventDefault();
-                pos1 = pos3 - e.clientX;
-                pos3 = e.clientX;
-                element.style.left = (element.offsetLeft - pos1) + "px";
+        function closePopup() {
+            popupWindow.style.display = 'none';
+            modalOverlay.style.display = 'none';
+        }
+
+        function regenerateText() {
+            // Function does nothing as per requirements
+        }
+
+        function openAddVideoModal() {
+            const videoOptionsContainer = document.getElementById('video-options');
+            videoOptionsContainer.innerHTML = '';
+            
+            videoUrls.forEach((url, index) => {
+                const fileName = url.split('/').pop();
+                const option = document.createElement('div');
+                option.className = 'video-option';
+                option.innerHTML = `
+                    <input type="checkbox" value="${index}">
+                    <span style="color: white">${videoNames[fileName]}</span>
+                `;
+                videoOptionsContainer.appendChild(option);
+            });
+
+            addVideoModal.style.display = 'block';
+            modalOverlay.style.display = 'block';
+        }
+
+        function closeAddVideoModal() {
+            addVideoModal.style.display = 'none';
+            modalOverlay.style.display = 'none';
+        }
+
+        function addSelectedVideos() {
+            const selectedVideos = Array.from(document.querySelectorAll('#video-options input[type="checkbox"]:checked'))
+                .map(checkbox => parseInt(checkbox.value));
+
+            selectedVideos.forEach(index => {
+                loadVideoSegment(index, true);
+            });
+
+            closeAddVideoModal();
+        }
+
+        function removeSegment(segmentElement) {
+            const index = parseInt(segmentElement.getAttribute('data-index'));
+            segments = segments.filter((_, i) => i !== index);
+            segmentElement.remove();
+            
+            // Update indices and recalculate
+            segments.forEach((segment, i) => {
+                segment.element.setAttribute('data-index', i);
+            });
+            
+            recalculateStartTimes();
+            adjustTimelineScale();
+            
+            // Reset current segment if needed
+            if (currentSegment >= segments.length) {
+                currentSegment = segments.length - 1;
             }
-
-            function closeDragElement() {
-                document.onmouseup = null;
-                document.onmousemove = null;
-                updateSegmentOrder();
+            if (currentSegment < 0) currentSegment = 0;
+            
+            if (segments.length > 0) {
+                preview.src = segments[currentSegment].videoUrl;
             }
         }
 
-        function updateSegmentOrder() {
-            segments.sort((a, b) => {
-                return a.element.offsetLeft - b.element.offsetLeft;
+        // Modified loadVideoSegment function to load videos sequentially
+        async function loadVideoSegment(index, append = false) {
+            try {
+                const video = document.createElement('video');
+                
+                // Create a promise that resolves when metadata is loaded
+                const loadPromise = new Promise((resolve, reject) => {
+                    video.onloadedmetadata = () => resolve(video.duration);
+                    video.onerror = () => reject(new Error(`Failed to load video ${index}`));
+                    setTimeout(() => reject(new Error('Video load timeout')), 10000);
+                });
+                
+                video.src = videoUrls[index];
+                const duration = await loadPromise;
+
+                const segment = document.createElement('div');
+                segment.className = 'video-segment';
+                segment.style.width = (duration * 50) + 'px';
+                segment.style.top = '20px';
+                segment.setAttribute('data-index', append ? segments.length : index);
+                
+                const fileName = videoUrls[index].split('/').pop();
+                const thumbnailPath = videoUrls[index].replace('Video_Panorama', 'Panorama').replace('.mp4', '_Thumbnail.png');                
+
+                segment.innerHTML = `
+                    <div class="segment-title">
+                        ${videoNames[fileName]}
+                    </div>
+                    <div class="segment-thumbnail" onclick="showVideoName('${videoNames[fileName]}')">
+                        <img src="${thumbnailPath}">
+                    </div>
+                    <div class="segment-description" onclick="showVideoName('${videoNames[fileName]}')">${videoDescriptions[fileName]}</div>
+                `;
+                
+                timeline.appendChild(segment);
+                
+                const segmentData = {
+                    element: segment,
+                    videoUrl: videoUrls[index],
+                    duration: duration,
+                    startTime: append ? totalDuration : 0
+                };
+                
+                if (append) {
+                    segments.push(segmentData);
+                    totalDuration += duration;
+                } else {
+                    segments[index] = segmentData;
+                }
+
+                setupDragAndDrop(segment);
+                
+                if (!append) {
+                    loadedVideos++;
+                    loadingProgress.style.width = (loadedVideos / videoUrls.length * 100) + '%';
+                    
+                    if (loadedVideos === videoUrls.length) {
+                        loadingScreen.style.display = 'none';
+                        recalculateStartTimes();
+                        adjustTimelineScale();
+                        if (segments.length > 0) {
+                            preview.src = segments[0].videoUrl;
+                        }
+                    }
+                } else {
+                    adjustTimelineScale();
+                }
+
+                // Clear video element to free memory
+                video.src = '';
+                video.load();
+                
+            } catch (error) {
+                console.error(`Error loading video ${index}:`, error);
+                loadingScreen.innerHTML = `<h2>Error loading videos</h2><p>Please check if all video files exist and try again.</p>`;
+            }
+        }
+
+        // Load videos one at a time
+        async function loadVideos() {
+            for (let i = 0; i < videoUrls.length; i++) {
+                await loadVideoSegment(i);
+                // Add small delay between loading videos
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+
+
+
+
+        function setupDragAndDrop(segment) {
+            segment.addEventListener('mousedown', (e) => {
+                if (e.button !== 0 || !e.target.classList.contains('segment-title')) return;
+                
+                e.preventDefault();
+                e.stopPropagation();
+
+                originalSegmentElement = segment;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+                draggedSegmentRect = segment.getBoundingClientRect();
+                initialSegmentX = segment.offsetLeft;
+                initialSegmentY = segment.offsetTop;
+
+                // Create a clone for the fixed position dragging
+                const clone = segment.cloneNode(true);
+                clone.style.position = 'fixed';
+                clone.style.left = draggedSegmentRect.left + 'px';
+                clone.style.top = draggedSegmentRect.top + 'px';
+                clone.style.width = draggedSegmentRect.width + 'px';
+                clone.classList.add('dragging');
+                document.body.appendChild(clone);
+                segment.style.opacity = '0.3';
+                draggedSegment = clone;
+
+                deleteZone.classList.add('active');
+
+                document.addEventListener('mousemove', handleDrag);
+                document.addEventListener('mouseup', handleDragEnd);
             });
         }
 
+        function findSnapPosition(currentX, timelineRect) {
+            if (isShiftPressed) return null; // Disable snapping when Shift is held
+
+            const snapPoints = [];
+            
+            // Add timeline start as snap point
+            snapPoints.push(timelineRect.left);
+            
+            // Add midpoints between segments as snap points
+            segments.forEach((segment, index) => {
+                if (segment.element !== originalSegmentElement) {
+                    const segRect = segment.element.getBoundingClientRect();
+                    
+                    // If it's the last segment, add a snap point after it
+                    if (index === segments.length - 1) {
+                        snapPoints.push(segRect.right);
+                    }
+                    // Add snap point before the segment
+                    snapPoints.push(segRect.left);
+                }
+            });
+            
+            // Find closest snap point within threshold
+            const closestPoint = snapPoints.reduce((closest, point) => {
+                const distance = Math.abs(currentX - point);
+                if (distance < snapThreshold && (!closest || distance < Math.abs(currentX - closest))) {
+                    return point;
+                }
+                return closest;
+            }, null);
+            
+            return closestPoint;
+        }
+
+        function handleDrag(e) {
+            if (!draggedSegment) return;
+
+            const deltaX = e.clientX - dragStartX;
+            const deltaY = e.clientY - dragStartY;
+            
+            const timelineRect = timeline.getBoundingClientRect();
+            const newLeft = draggedSegmentRect.left + deltaX;
+            
+            // Find snap position
+            const snapPosition = findSnapPosition(newLeft, timelineRect);
+            
+            if (snapPosition !== null) {
+                // Update dragged clone position
+                draggedSegment.style.left = snapPosition + 'px';
+                // Update snap guide position
+                snapGuide.style.left = (snapPosition - timelineRect.left) + 'px';
+                snapGuide.classList.add('active');
+                
+                // Update original segment position without scaling adjustment
+                originalSegmentElement.style.left = (snapPosition - timelineRect.left) + 'px';
+            } else {
+                // Update dragged clone position
+                draggedSegment.style.left = newLeft + 'px';
+                snapGuide.classList.remove('active');
+                
+                // Update original segment position without scaling adjustment
+                originalSegmentElement.style.left = (newLeft - timelineRect.left) + 'px';
+            }
+            
+            draggedSegment.style.top = draggedSegmentRect.top + deltaY + 'px';
+
+            // Check delete zone overlap
+            const deleteZoneRect = deleteZone.getBoundingClientRect();
+            const segmentRect = draggedSegment.getBoundingClientRect();
+            
+            if (isOverlapping(segmentRect, deleteZoneRect)) {
+                deleteZone.classList.add('hover');
+            } else {
+                deleteZone.classList.remove('hover');
+            }
+        }
+
+        function isOverlapping(rect1, rect2) {
+            return !(rect1.right < rect2.left || 
+                    rect1.left > rect2.right || 
+                    rect1.bottom < rect2.top || 
+                    rect1.top > rect2.bottom);
+        }
+
+        document.getElementById('volume-slider').addEventListener('input', function(e) {
+            backgroundMusic.volume = e.target.value / 100;
+        });
+
+        function handleDragEnd() {
+            if (!draggedSegment || !originalSegmentElement) return;
+
+            const deleteZoneRect = deleteZone.getBoundingClientRect();
+            const segmentRect = draggedSegment.getBoundingClientRect();
+            const timelineRect = timeline.getBoundingClientRect();
+
+            if (isOverlapping(segmentRect, deleteZoneRect)) {
+                removeSegment(originalSegmentElement);
+            } else if (segmentRect.top >= timelineRect.top && segmentRect.top <= timelineRect.bottom) {
+                // Calculate new position relative to timeline
+                const snapPosition = findSnapPosition(segmentRect.left, timelineRect);
+                const newLeft = snapPosition !== null ? 
+                    snapPosition - timelineRect.left :
+                    segmentRect.left - timelineRect.left;
+                
+                // Find the correct position in the segments array
+                const segmentIndex = parseInt(originalSegmentElement.getAttribute('data-index'));
+                const segment = segments[segmentIndex];
+                
+                // Remove segment from current position
+                segments.splice(segmentIndex, 1);
+                
+                // Find new position based on left coordinate
+                let insertIndex = 0;
+                while (insertIndex < segments.length && 
+                    segments[insertIndex].element.offsetLeft < newLeft) {
+                    insertIndex++;
+                }
+                
+                // Insert segment at new position
+                segments.splice(insertIndex, 0, segment);
+                
+                // Update DOM
+                originalSegmentElement.style.left = newLeft + 'px';
+                originalSegmentElement.style.opacity = '1';
+                
+                // Update indices and recalculate positions
+                segments.forEach((seg, i) => {
+                    seg.element.setAttribute('data-index', i);
+                });
+                
+                recalculateStartTimes();
+                adjustTimelineScale();
+            } else {
+                originalSegmentElement.style.opacity = '1';
+            }
+
+            // Cleanup
+            draggedSegment.remove();
+            deleteZone.classList.remove('active');
+            deleteZone.classList.remove('hover');
+            snapGuide.classList.remove('active');
+            document.removeEventListener('mousemove', handleDrag);
+            document.removeEventListener('mouseup', handleDragEnd);
+            draggedSegment = null;
+            originalSegmentElement = null;
+        }
+
+        function adjustTimelineScale() {
+            const timelineWidth = timeline.offsetWidth;
+            totalDuration = segments.reduce((total, segment) => total + segment.duration, 0);
+            const totalWidth = totalDuration * 50;
+            timelineScale = Math.min(1, timelineWidth / totalWidth);
+
+            document.documentElement.style.setProperty('--timeline-scale', timelineScale);
+
+            segments.forEach(segment => {
+                segment.element.style.transform = `scaleX(${timelineScale})`;
+                segment.element.style.left = (segment.startTime * 50 * timelineScale) + 'px';
+            });
+
+            updateTimeMarkers();
+        }
+
+        // Start loading videos
+        window.addEventListener('load', () => {
+            loadVideos().catch(error => {
+                console.error('Error starting video load:', error);
+                loadingScreen.innerHTML = `<h2>Error loading videos</h2><p>Please check if all video files exist and try again.</p>`;
+            });
+        });
+
+        function recalculateStartTimes() {
+            let currentTime = 0;
+            segments.forEach(segment => {
+                segment.startTime = currentTime;
+                segment.element.style.left = (currentTime * 50 * timelineScale) + 'px';
+                currentTime += segment.duration;
+            });
+            totalDuration = currentTime;
+        }
+
+        function updateSegmentOrder() {
+            const newOrder = [...segments].sort((a, b) => {
+                return a.element.offsetLeft - b.element.offsetLeft;
+            });
+
+            segments = newOrder;
+            segments.forEach((segment, index) => {
+                segment.element.setAttribute('data-index', index);
+            });
+
+            currentSegment = segments.findIndex(seg => seg.videoUrl === preview.src);
+            if (currentSegment === -1) currentSegment = 0;
+        }
+
+        function updateScrubber() {
+            if (isPlaying) {
+                const currentTime = preview.currentTime;
+                const segmentStartTime = segments[currentSegment].startTime;
+                const scrubberPosition = (segmentStartTime + currentTime) * 50 * timelineScale;
+                scrubber.style.left = scrubberPosition + 'px';
+                
+                if (currentTime >= segments[currentSegment].duration) {
+                    nextVideo();
+                }
+                
+                requestAnimationFrame(updateScrubber);
+            }
+        }
+
+        function togglePlayPause() {
+            if (isPlaying) {
+                pauseVideo();
+                playPauseBtn.textContent = 'Play';
+            } else {
+                playVideo();
+                playPauseBtn.textContent = 'Pause';
+            }
+        }
+
         function playVideo() {
-            preview.src = segments[currentSegment].video.src;
+            isPlaying = true;
+            if (!preview.src) {
+                preview.src = segments[currentSegment].videoUrl;
+                preview.currentTime = 0;
+            }
             preview.play();
+            backgroundMusic.play(); // Add this line
+            updateScrubber();
         }
 
         function pauseVideo() {
+            isPlaying = false;
             preview.pause();
+            backgroundMusic.pause(); // Add this line
         }
 
-        function stopVideo() {
-            preview.pause();
-            preview.currentTime = 0;
-            currentSegment = 0;
+        function nextVideo() {
+            if (currentSegment < segments.length - 1) {
+                currentSegment++;
+                preview.src = segments[currentSegment].videoUrl;
+                preview.currentTime = 0;
+                const scrubberPosition = segments[currentSegment].startTime * 50 * timelineScale;
+                scrubber.style.left = scrubberPosition + 'px';
+                if (isPlaying) {
+                    preview.play();
+                    // Add these lines to handle music continuation
+                    if (!backgroundMusic.paused) {
+                        backgroundMusic.currentTime = segments[currentSegment].startTime;
+                    }
+                }
+            } else {
+                isPlaying = false;
+                preview.pause();
+                backgroundMusic.pause(); // Add this line
+                backgroundMusic.currentTime = 0; // Add this line
+                preview.currentTime = 0;
+                currentSegment = 0;
+                scrubber.style.left = '0px';
+                playPauseBtn.textContent = 'Play';
+            }
         }
+
+        function previousVideo() {
+            if (currentSegment > 0) {
+                currentSegment--;
+                preview.src = segments[currentSegment].videoUrl;
+                preview.currentTime = 0;
+                const scrubberPosition = segments[currentSegment].startTime * 50 * timelineScale;
+                scrubber.style.left = scrubberPosition + 'px';
+                if (isPlaying) {
+                    preview.play();
+                    // Add these lines to handle music continuation
+                    if (!backgroundMusic.paused) {
+                        backgroundMusic.currentTime = segments[currentSegment].startTime;
+                    }
+                }
+            }
+        }
+
+        // Add this near the top of your script with other initialization code
+        window.addEventListener('load', () => {
+            // Set music to loop
+            backgroundMusic.loop = true;
+            // Set initial volume (0.5 = 50%)
+            backgroundMusic.volume = 0.15;
+        });
+
 
         timeline.addEventListener('click', function(e) {
+            if (draggedSegment) return;
+
             const timelineRect = timeline.getBoundingClientRect();
             const clickPosition = e.clientX - timelineRect.left;
             scrubber.style.left = clickPosition + 'px';
             
-            // Find which video segment was clicked
-            let totalWidth = 0;
+            let timePosition = clickPosition / (50 * timelineScale);
+            
             for (let i = 0; i < segments.length; i++) {
-                const segWidth = parseFloat(segments[i].element.style.width);
-                if (clickPosition >= totalWidth && clickPosition < totalWidth + segWidth) {
+                if (timePosition >= segments[i].startTime && 
+                    timePosition < segments[i].startTime + segments[i].duration) {
                     currentSegment = i;
-                    preview.src = segments[i].video.src;
-                    preview.currentTime = (clickPosition - totalWidth) / 50; // 50px per second
+                    preview.src = segments[i].videoUrl;
+                    preview.currentTime = timePosition - segments[i].startTime;
                     break;
                 }
-                totalWidth += segWidth;
             }
         });
 
-        // Add time markers
-        const timeMarkers = document.querySelector('.time-markers');
-        for (let i = 0; i < 10; i++) {
-            const marker = document.createElement('div');
-            marker.style.position = 'absolute';
-            marker.style.left = (i * 300) + 'px';
-            marker.style.top = '0';
-            marker.style.color = 'white';
-            marker.innerHTML = i * 5 + 's';
-            timeMarkers.appendChild(marker);
+        function updateTimeMarkers() {
+            const timeMarkers = document.querySelector('.time-markers');
+            timeMarkers.innerHTML = '';
+            const totalSeconds = Math.ceil(totalDuration);
+            const markerInterval = Math.max(1, Math.ceil(totalSeconds / 20));
+            
+            for (let i = 0; i <= totalSeconds; i += markerInterval) {
+                const marker = document.createElement('div');
+                marker.style.position = 'absolute';
+                marker.style.left = (i * 50 * timelineScale) + 'px';
+                marker.style.top = '0';
+                marker.style.color = 'white';
+                marker.innerHTML = i + 's';
+                timeMarkers.appendChild(marker);
+            }
         }
+
+        window.addEventListener('resize', adjustTimelineScale);
     </script>
 </body>
 </html>
